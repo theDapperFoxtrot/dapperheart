@@ -17,6 +17,7 @@ export function DiceRoller({ modal, setModal, result, setResult, rolling, setRol
       const base = tk ? (c.traits[tk] || 0) : 0;
       const armorMod = tk ? (mods[tk] || 0) : 0;
       const traitMod = base + armorMod;
+      const expBonus = modal.exp !== undefined && modal.exp !== "" ? (c.exps[modal.exp]?.b || 0) : 0;
       const breakdown = [];
       if (tk) {
         const advCount = advH.filter(a => a.type === "traits" && a.traits?.includes(tk)).length;
@@ -31,8 +32,12 @@ export function DiceRoller({ modal, setModal, result, setResult, rolling, setRol
         if (armorMod !== 0) breakdown.push({ value: armorMod, label: "Armor (" + c.armorName + ")", source: `${c.armorWeight || "Armor"} weight: ${armorMod > 0 ? "+" : ""}${armorMod} to ${tk}` });
       }
       if (advDie !== 0) breakdown.push({ value: advDie, label: advDie > 0 ? "Advantage (d6)" : "Disadvantage (d6)", source: advDie > 0 ? "Rolled a d6 and added it" : "Rolled a d6 and subtracted it" });
-      const total = hope + fear + traitMod + advDie; const withHope = hope >= fear;
-      setResult({ hope, fear, advDie, traitMod, total, withHope, crit: hope === fear, label: modal.label, breakdown, traitBase: base, armorMod });
+      if (expBonus !== 0) {
+        const expName = c.exps[modal.exp]?.n || `Exp ${modal.exp + 1}`;
+        breakdown.push({ value: expBonus, label: `Experience: ${expName}`, source: `Experience bonus (+${expBonus})` });
+      }
+      const total = hope + fear + traitMod + advDie + expBonus; const withHope = hope >= fear;
+      setResult({ hope, fear, advDie, traitMod, expBonus, total, withHope, crit: hope === fear, label: modal.label, breakdown, traitBase: base, armorMod });
       setRolling(false);
     }, 650);
   };
@@ -49,6 +54,15 @@ export function DiceRoller({ modal, setModal, result, setResult, rolling, setRol
           <input type="radio" name="adv" checked={modal.adv === v} onChange={() => setModal({ ...modal, adv: v })} style={{ accentColor: "#d4a017" }} />
           <span style={{ fontSize: 12, textTransform: "capitalize" }}>{v === "none" ? "Normal" : v}</span></label>)}
       </div>
+      {c.exps?.length > 0 && <div style={{ display: "flex", gap: 6, alignItems: "center", justifyContent: "center", margin: "0 0 12px" }}>
+        <span style={{ fontSize: 12, color: "#888", fontFamily: "'Barlow Condensed'", letterSpacing: ".06em" }}>EXPERIENCE</span>
+        <select style={{ ...S.fs, width: "auto", minWidth: 120, fontSize: 12 }}
+          value={modal.exp !== undefined ? modal.exp : ""}
+          onChange={e => setModal({ ...modal, exp: e.target.value === "" ? undefined : +e.target.value })}>
+          <option value="">None</option>
+          {c.exps.map((exp, i) => <option key={i} value={i}>{exp.n || `Exp ${i + 1}`} (+{exp.b})</option>)}
+        </select>
+      </div>}
       <button onClick={rollDice} disabled={rolling} style={{ ...S.actBtn, fontSize: 14, padding: "8px 32px", background: rolling ? "#3a3a3e" : "#d4a017", color: "#0d0d0f", border: "none", letterSpacing: ".1em" }}>{rolling ? "ROLLING..." : "ROLL"}</button>
 
       {rolling && <div style={{ marginTop: 16, padding: 20 }}>

@@ -14,15 +14,17 @@
     transform: translateX(-50%);
     background: $gold;
     color: $bg;
-    padding: 6px 10px;
-    font-size: 12px;
-    white-space: pre-wrap;
-    max-width: 260px;
+    padding: 8px 14px;
+    font-size: 14px;
+    white-space: normal;
+    width: max-content;
+    max-width: min(440px, 85vw);
+    min-width: 200px;
     z-index: 50;
     border-radius: 3px;
     pointer-events: none;
     font-family: $font-body;
-    line-height: 1.4;
+    line-height: 1.5;
     font-weight: 500;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
   }

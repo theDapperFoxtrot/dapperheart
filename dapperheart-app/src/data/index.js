@@ -4,3 +4,5 @@ export { KEYWORDS } from './keywords';
 export { ANCESTRIES, COMMUNITIES } from './heritage';
 export { DOMAIN_CARDS } from './domainCards';
 export { TIER_ADV, TRAITS } from './advancement';
+export { DRUID_BEASTFORMS } from './beastforms';
+export { DOMAIN_THEME, CARD_TYPE_STYLE } from './domainTheme';

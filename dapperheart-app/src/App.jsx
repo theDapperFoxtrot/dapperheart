@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CLASSES, CLASS_DEFAULTS, ARMOR_DB, WEAPON_DB, WEIGHT_MODS, DOMAIN_CARDS } from './data';
+import { CLASSES, CLASS_DEFAULTS, ARMOR_DB, WEAPON_DB, WEIGHT_MODS, DOMAIN_CARDS, DRUID_BEASTFORMS } from './data';
 import { parseAbilityCost, smartToggle } from './utils';
 import { S } from './styles/theme';
 import { def } from './state/defaults';
@@ -37,7 +37,7 @@ export default function App() {
   // Derived data
   const cls = CLASSES[c.className];
   const mcls = CLASSES[c.multiclass];
-  const { mods, effEvasion, effTraits, hopeCount, stressCount, isVulnerable, tier, compMinor, compMajor, compSevere } = computeStats(c);
+  const { mods, effEvasion, effTraits, hopeCount, stressCount, isVulnerable, tier, compMinor, compMajor, compSevere, effectAttackBonus } = computeStats(c);
   const myDomains = [...(cls ? cls.domains : []), ...(mcls ? mcls.domains : [])].filter((v, i, a) => a.indexOf(v) === i);
   const myCards = myDomains.flatMap(d => (DOMAIN_CARDS[d] || []).filter(cd => cd.lv <= c.level).map(cd => ({ ...cd, domain: d })));
   const acquiredNames = new Set([...c.loadout.map(x => x.name), ...c.vault.map(x => x.name)]);
@@ -50,7 +50,7 @@ export default function App() {
     setC(p => {
       const n = { ...p, className: name, subclass: "", baseEvasion: cl.ev, hpSlots: cl.hp,
         hpM: Array(cl.hp).fill(false), stressSlots: 6, stressM: Array(6).fill(false), hopeM: [true, true, false, false, false],
-        traits: defs.traits, loadout: [], vault: [] };
+        traits: defs.traits, loadout: [], vault: [], beastform: null };
       if (armor) { n.armorId = armor.name; n.armorName = armor.name; n.armorMinor = armor.minor; n.armorMajor = armor.major; n.armorScore = armor.score; n.armorWeight = armor.weight; n.armorFeat = armor.feat; n.armorMods = armor.mods || {}; n.armorTotal = armor.score; n.armorM = Array(armor.score).fill(false); }
       if (wpn) { n.wpn = { ...p.wpn, pri: { id: wpn.name, name: wpn.name, tr: wpn.tr, range: wpn.range, dmg: wpn.dmg, dmgType: wpn.type === "phy" ? "Physical" : "Magic", hand: wpn.hand, feat: wpn.feat } }; }
       return n;
@@ -80,8 +80,211 @@ export default function App() {
     u("wpn", { ...c.wpn, [slot]: { id: w.name, name: w.name, tr: w.tr, range: w.range, dmg: w.dmg, dmgType: w.type === "phy" ? "Physical" : "Magic", hand: w.hand, feat: w.feat } });
   };
 
+  const dropBeastform = (msg) => {
+    if (!c.beastform) return;
+    const active = c.beastform;
+    u("beastform", null);
+    flash(msg || `Dropped ${active.name} Beastform.`);
+  };
+
+  const withBeastformRestriction = (blocked, actionName, onContinue) => {
+    if (!blocked || !c.beastform) return onContinue();
+    modals.askConfirm(
+      `${actionName} is unavailable in ${c.beastform.name} Beastform. Drop form and continue?`,
+      () => {
+        dropBeastform(`Dropped ${c.beastform.name} Beastform to use ${actionName}.`);
+        onContinue();
+      }
+    );
+  };
+
+  const chooseBeastform = (formId) => {
+    if (c.className !== "Druid") return;
+    const form = DRUID_BEASTFORMS.find(f => f.id === formId);
+    if (!form) return;
+    const currentStress = (c.stressM || []).filter(Boolean).length;
+    if (currentStress >= c.stressSlots) {
+      flash("All Stress slots are filled. Clear Stress before entering Beastform.");
+      return;
+    }
+
+    const activate = () => {
+      const newStress = [...(c.stressM || [])];
+      while (newStress.length < c.stressSlots) newStress.push(false);
+      for (let i = 0; i < newStress.length; i++) {
+        if (!newStress[i]) {
+          newStress[i] = true;
+          break;
+        }
+      }
+      setC(prev => ({
+        ...prev,
+        stressM: newStress,
+        beastform: {
+          id: form.id,
+          name: form.name,
+          summary: form.summary,
+          evasion: form.evasion,
+          traits: form.traits,
+          attackTrait: form.attackTrait,
+          attackDice: form.attackDice,
+          attackType: form.attackType,
+          advantages: form.advantages || [],
+          features: form.features || [],
+          examples: form.examples || [],
+        },
+      }));
+      flash(`Entered ${form.name} Beastform (marked 1 Stress).`);
+    };
+
+    if (c.beastform?.id === form.id) {
+      flash(`${form.name} Beastform is already active.`);
+      return;
+    }
+    if (c.beastform) {
+      modals.askConfirm(
+        `Switch from ${c.beastform.name} Beastform to ${form.name} Beastform? This marks 1 Stress.`,
+        activate
+      );
+      return;
+    }
+    activate();
+  };
+
+  // ── Active Effects ──
+  const addEffect = (effect) => {
+    setC(p => ({
+      ...p,
+      activeEffects: [...(p.activeEffects || []).filter(e => e.id !== effect.id), effect],
+    }));
+    flash(`${effect.name} activated.`);
+  };
+
+  const removeEffect = (effectId, msg) => {
+    const eff = (c.activeEffects || []).find(e => e.id === effectId);
+    if (!eff) return;
+    setC(p => ({
+      ...p,
+      activeEffects: (p.activeEffects || []).filter(e => e.id !== effectId),
+    }));
+    flash(msg || `${eff.name} ended.`);
+  };
+
+  // Check for auto-removal conditions when HP changes
+  const onHpChange = (newHpM) => {
+    const oldFilled = (c.hpM || []).filter(Boolean).length;
+    const hpFilled = newHpM.filter(Boolean).length;
+    const allHpMarked = hpFilled >= c.hpSlots;
+    const tookHit = hpFilled > oldFilled;
+
+    // Auto-drop beastform when last HP is marked
+    if (allHpMarked && c.beastform) {
+      setC(p => ({
+        ...p, hpM: newHpM, beastform: null,
+        activeEffects: (p.activeEffects || []).filter(e => e.removeOn !== "hit"),
+      }));
+      flash(`All HP marked — dropped ${c.beastform.name} Beastform!`);
+      return;
+    }
+
+    // Marking HP = attack succeeded → remove "hit" effects
+    if (tookHit) {
+      const dodge = (c.activeEffects || []).find(e => e.removeOn === "hit");
+      if (dodge) {
+        setC(p => ({
+          ...p, hpM: newHpM,
+          activeEffects: (p.activeEffects || []).filter(e => e.removeOn !== "hit"),
+        }));
+        flash(`${dodge.name} ended — you took damage.`);
+        return;
+      }
+    }
+    u("hpM", newHpM);
+  };
+
+  // Check for auto-removal conditions when armor slots change (attack succeeded → Rogue's Dodge ends)
+  const onArmorHit = () => {
+    const dodge = (c.activeEffects || []).find(e => e.removeOn === "hit");
+    if (dodge) {
+      removeEffect(dodge.id, `${dodge.name} ended — attack succeeded against you.`);
+    }
+  };
+
+  // Activate class-specific Hope features
+  const activateHopeFeature = () => {
+    if (!cls) return;
+    const cn = c.className;
+
+    if (cn === "Rogue") {
+      if (hopeCount < 3) return flash("Not enough Hope! Need 3.");
+      const newHope = [...(c.hopeM || [])];
+      let remaining = 3;
+      for (let i = newHope.length - 1; i >= 0 && remaining > 0; i--) if (newHope[i]) { newHope[i] = false; remaining--; }
+      setC(p => ({
+        ...p,
+        hopeM: newHope,
+        activeEffects: [...(p.activeEffects || []).filter(e => e.id !== "rogues-dodge"), {
+          id: "rogues-dodge",
+          name: "Rogue's Dodge",
+          desc: "+2 Evasion until an attack succeeds against you or you rest.",
+          mods: { evasion: 2 },
+          removeOn: "hit",
+          removeOnRest: true,
+        }],
+      }));
+      flash("Rogue's Dodge activated! +2 Evasion.");
+      return;
+    }
+
+    if (cn === "Warrior") {
+      if (hopeCount < 3) return flash("Not enough Hope! Need 3.");
+      const newHope = [...(c.hopeM || [])];
+      let remaining = 3;
+      for (let i = newHope.length - 1; i >= 0 && remaining > 0; i--) if (newHope[i]) { newHope[i] = false; remaining--; }
+      setC(p => ({
+        ...p,
+        hopeM: newHope,
+        activeEffects: [...(p.activeEffects || []).filter(e => e.id !== "no-mercy"), {
+          id: "no-mercy",
+          name: "No Mercy",
+          desc: "+1 to attack rolls until your next rest.",
+          mods: { attack: 1 },
+          removeOnRest: true,
+        }],
+      }));
+      flash("No Mercy activated! +1 to attack rolls.");
+      return;
+    }
+
+    if (cn === "Guardian") {
+      if (hopeCount < 3) return flash("Not enough Hope! Need 3.");
+      const newHope = [...(c.hopeM || [])];
+      let remaining = 3;
+      for (let i = newHope.length - 1; i >= 0 && remaining > 0; i--) if (newHope[i]) { newHope[i] = false; remaining--; }
+      u("hopeM", newHope);
+      // Clear 2 armor slots
+      const newArmor = [...(c.armorM || [])];
+      let cleared = 0;
+      for (let i = newArmor.length - 1; i >= 0 && cleared < 2; i--) {
+        if (newArmor[i]) { newArmor[i] = false; cleared++; }
+      }
+      u("armorM", newArmor);
+      flash(`Frontline Tank: Cleared ${cleared} Armor Slot${cleared !== 1 ? "s" : ""}. (Spent 3 Hope)`);
+      return;
+    }
+
+    // Default: fall through to the ability modal for other classes
+    useAbility(c.className + " Hope Feature", cls.hope);
+  };
+
   // Ability use
-  const useAbility = (name, desc) => { const cost = parseAbilityCost(desc); modals.setAbilityModal({ name, desc, cost }); };
+  const useAbility = (name, desc, meta = {}) => {
+    const blocked = !!c.beastform && meta.source === "domainSpell";
+    withBeastformRestriction(blocked, name, () => {
+      const cost = parseAbilityCost(desc);
+      modals.setAbilityModal({ name, desc, cost });
+    });
+  };
   const commitAbility = () => {
     if (!modals.abilityModal?.cost) { modals.setAbilityModal(null); return; }
     const { resource, amount } = modals.abilityModal.cost;
@@ -106,8 +309,20 @@ export default function App() {
   const removeCard = card => { modals.askConfirm(`Remove ${card.name} from your collection?`, () => { u("loadout", c.loadout.filter(x => x.name !== card.name)); u("vault", c.vault.filter(x => x.name !== card.name)); }); };
 
   // Dice + damage
-  const openDice = (label, trait, difficulty) => { modals.setDiceResult(null); modals.setDiceRolling(false); modals.setDiceModal({ label, trait: trait || "", adv: "none", dc: difficulty || null }); };
-  const openDmg = (label, dice, hasPowerful) => modals.setDmgModal({ label, dice, prof: c.proficiency, hasPowerful: !!hasPowerful });
+  const openDice = (label, trait, difficulty, meta = {}) => {
+    const blocked = !!c.beastform && (meta.source === "weapon" || meta.source === "domainSpell");
+    withBeastformRestriction(blocked, label, () => {
+      modals.setDiceResult(null);
+      modals.setDiceRolling(false);
+      modals.setDiceModal({ label, trait: trait || "", adv: "none", dc: difficulty || null });
+    });
+  };
+  const openDmg = (label, dice, hasPowerful, meta = {}) => {
+    const blocked = !!c.beastform && meta.source === "weapon";
+    withBeastformRestriction(blocked, label, () => {
+      modals.setDmgModal({ label, dice, prof: c.proficiency, hasPowerful: !!hasPowerful });
+    });
+  };
 
   // Level up
   const startLevelUp = () => { if (c.level >= 10) return flash("Max level!"); modals.setLvlUp({ nl: c.level + 1, opts: [], details: {}, card: null, mc: "" }); };
@@ -175,9 +390,12 @@ export default function App() {
         myDomains={myDomains} highlight={highlight} advH={advH} acquiredNames={acquiredNames}
         openDice={openDice} openDmg={openDmg} openModPopup={openModPopup} useAbility={useAbility}
         equipArmor={equipArmor} equipWeapon={equipWeapon} selectClass={selectClass}
-        setArmorWeight={setArmorWeight} flash={flash} askConfirm={modals.askConfirm} />}
+        setArmorWeight={setArmorWeight} flash={flash} askConfirm={modals.askConfirm}
+        chooseBeastform={chooseBeastform} dropBeastform={dropBeastform}
+        onHpChange={onHpChange} onArmorHit={onArmorHit}
+        activateHopeFeature={activateHopeFeature} removeEffect={removeEffect} />}
 
-      {tab === "guide" && <GuideTab c={c} u={u} cls={cls} />}
+      {tab === "guide" && <GuideTab c={c} u={u} setC={setC} cls={cls} />}
 
       {tab === "cards" && <CardsTab c={c} cls={cls} myDomains={myDomains} myCards={myCards}
         acquiredNames={acquiredNames} highlight={highlight}
