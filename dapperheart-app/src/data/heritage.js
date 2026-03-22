@@ -1,0 +1,30 @@
+export const ANCESTRIES=[
+{name:"Clank",features:["Built for a Purpose: +1 to a trait of your choice.","Sturdy Construction: Once/long rest, when you mark last HP, clear 1 HP instead."]},
+{name:"Drakona",features:["Elemental Breath: Once/short rest, exhale elemental energy cone.","Thick Scales: Permanent +1 to damage thresholds."]},
+{name:"Dwarf",features:["Sturdy: +1 Strength.","Resilient: Once/long rest, mark 1 fewer Stress when you'd mark 2+."]},
+{name:"Elf",features:["Celestial Trance: 4-hour trance replaces sleep.","Keen Senses: Advantage on perceive/locate."]},
+{name:"Faerie",features:["Flutter: Fly up to Very Close range.","Fey Touched: Minor illusions at will."]},
+{name:"Faun",features:["Sure-Footed: Advantage on difficult terrain.","Horns: Natural Melee weapon (d6 phy)."]},
+{name:"Firbolg",features:["Gentle Giant: Advantage to calm/soothe/befriend.","Nature's Veil: Once/rest, Hidden in nature."]},
+{name:"Fungril",features:["Spore Cloud: Once/rest, obscuring spores.","Mycelial Network: Silent communication via touch."]},
+{name:"Galapa",features:["Shell Defense: Mark Stress → retract; +3 Evasion, can't move.","Slow and Steady: Can't be knocked prone/force-moved."]},
+{name:"Giant",features:["Mighty: +1 Strength.","Towering Presence: Advantage on intimidate."]},
+{name:"Goblin",features:["Darkvision: See in darkness.","Nimble Escape: Once/rest, move Very Close as reaction to hit."]},
+{name:"Halfling",features:["Lucky: Once/session, reroll any die.","Small and Sneaky: Advantage on hide/sneak."]},
+{name:"Human",features:["Adaptability: Mark Stress for advantage on any roll.","Versatile: Extra Experience at +2."]},
+{name:"Infernis",features:["Demonic Resistance: Half fire damage.","Infernal Legacy: Once/rest, see in magical darkness."]},
+{name:"Katari",features:["Feline Instincts: On Agility rolls, mark Stress to reroll Hope Die.","Retractable Claws: Natural Melee weapon (d6 phy)."]},
+{name:"Orc",features:["Relentless: Once/long rest, stay at 1 HP instead of downed.","Mighty Build: Count as one size larger."]},
+{name:"Ribbet",features:["Amphibious: Breathe and move underwater.","Long Tongue: Grab Close range. Mark Stress for d12 Finesse Close weapon."]},
+{name:"Simiah",features:["Prehensile Feet: Climb at normal speed.","Acrobatic: Advantage on acrobatics/balance."]}];
+
+export const COMMUNITIES=[
+{name:"Highborne",feature:"Silver Tongue: Advantage when persuading with status/wealth.",adj:["Sophisticated","Entitled","Influential","Polished","Commanding","Privileged"]},
+{name:"Loreborne",feature:"Well-Read: Once/session, ask GM a lore question truthfully.",adj:["Studious","Analytical","Curious","Meticulous","Insightful","Reserved"]},
+{name:"Orderborne",feature:"Practiced: Choose a trait. Once/session, treat roll as 10.",adj:["Disciplined","Devoted","Righteous","Methodical","Principled","Resolute"]},
+{name:"Ridgeborne",feature:"Mountain Born: Advantage on climbing/endurance/rough terrain.",adj:["Hardy","Stubborn","Grounded","Rugged","Enduring","Blunt"]},
+{name:"Seaborne",feature:"Sea Legs: Advantage on swimming/sailing/water.",adj:["Adventurous","Resourceful","Free-spirited","Adaptable","Restless","Bold"]},
+{name:"Slyborne",feature:"Underworld Contacts: Once/session, know someone nearby — for a price.",adj:["Cunning","Streetwise","Opportunistic","Wary","Charming","Unpredictable"]},
+{name:"Underborne",feature:"Darkvision: See in darkness as dim light.",adj:["Cautious","Resourceful","Secretive","Resilient","Observant","Tenacious"]},
+{name:"Wanderborne",feature:"Well-Traveled: Once/session, know a useful local fact.",adj:["Worldly","Independent","Open-minded","Restless","Empathetic","Adaptable"]},
+{name:"Wildborne",feature:"Nature's Instinct: Advantage on survival/foraging/tracking.",adj:["Feral","Intuitive","Protective","Quiet","Fierce","Connected"]}];

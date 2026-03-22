@@ -1,6 +1,6 @@
 {
-  "name": "Daggerheart Character Sheet",
-  "short_name": "Daggerheart",
+  "name": "Dapperheart — Daggerheart Character Sheet",
+  "short_name": "Dapperheart",
   "description": "Unofficial digital character sheet for Daggerheart TTRPG",
   "start_url": "./",
   "display": "standalone",

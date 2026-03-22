@@ -1,0 +1,42 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hlPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(80, 160, 255, .7); }
+  30%  { box-shadow: 0 0 0 4px rgba(80, 160, 255, .5); }
+  60%  { box-shadow: 0 0 0 2px rgba(80, 160, 255, .3); }
+  100% { box-shadow: 0 0 0 0 rgba(80, 160, 255, 0); }
+}
+
+@keyframes diceSpin {
+  0%   { content: "1";  opacity: 1; }
+  10%  { content: "7"; }
+  20%  { content: "3"; }
+  30%  { content: "11"; }
+  40%  { content: "5"; }
+  50%  { content: "9"; }
+  60%  { content: "2"; }
+  70%  { content: "12"; }
+  80%  { content: "6"; }
+  90%  { content: "4"; }
+  100% { content: "8"; opacity: .6; }
+}
+
+@keyframes diceFlicker {
+  0%   { opacity: 1; }
+  10%  { opacity: .5; }
+  20%  { opacity: 1; }
+  30%  { opacity: .4; }
+  40%  { opacity: 1; }
+  50%  { opacity: .5; }
+  60%  { opacity: 1; }
+  70%  { opacity: .3; }
+  80%  { opacity: 1; }
+  90%  { opacity: .6; }
+  100% { opacity: 1; }
+}
+
+.dice-spin { animation: diceFlicker .65s steps(1) infinite; }
+.dice-anim { animation: fadeIn .2s ease; }

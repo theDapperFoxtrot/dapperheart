@@ -1,0 +1,29 @@
+@use 'variables' as *;
+
+.kw-tip {
+  position: relative;
+  border-bottom: 1px dashed $gold;
+  cursor: help;
+
+  &:hover::after,
+  &:focus::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: $gold;
+    color: $bg;
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-width: 260px;
+    z-index: 50;
+    border-radius: 3px;
+    pointer-events: none;
+    font-family: $font-body;
+    line-height: 1.4;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+  }
+}

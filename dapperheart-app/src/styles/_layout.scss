@@ -1,0 +1,12 @@
+@use 'variables' as *;
+
+// Top bar
+.dh-topbar button:active { transform: scale(.95); }
+.dh-overflow-wrap button:hover { background: $surface-dim; }
+
+// Bottom nav
+.dh-bottomnav {
+  -webkit-tap-highlight-color: transparent;
+
+  button:active { transform: scale(.93); }
+}

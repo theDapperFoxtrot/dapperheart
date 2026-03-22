@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './styles/global.scss'
 
 // Polyfill window.storage for self-hosted usage (mirrors Claude artifact storage API)
 if (!window.storage) {
